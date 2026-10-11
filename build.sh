@@ -10,9 +10,9 @@ chown -R 0:0 files
 "$builder" mkpkg \
  --files files \
  --info name:luci-app-lan-ports \
- --info version:1.0.1-r0 \
+ --info version:1.1.0-r0 \
  --info arch:aarch64_cortex-a53 \
- --info 'description:LAN 网口协商速度 - eight LAN port negotiated link speeds for SEED AC3' \
+ --info 'description:WAN and LAN negotiated link speeds for SEED AC3' \
  --info license:MIT \
  --info 'depends:luci-base rpcd-mod-file kmod-mdio-netlink kmod-switch-rtl8373=6.12.94-r1' \
  --script pre-install:scripts/pre-install \
@@ -20,4 +20,4 @@ chown -R 0:0 files
  --script post-install:scripts/post-install \
  --script post-upgrade:scripts/post-install \
  --script post-deinstall:scripts/post-deinstall \
- --output luci-app-lan-ports-1.0.1-r0.apk
+ --output luci-app-lan-ports-1.1.0-r0.apk

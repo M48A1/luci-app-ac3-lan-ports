@@ -1,6 +1,6 @@
 {
  "admin/status/lan_ports": {
-  "title": "LAN 网口协商速度",
+  "title": "网口协商速度",
   "order": 8,
   "action": { "type": "view", "path": "status/lan_ports" },
   "depends": { "acl": ["luci-app-lan-ports"], "fs": {"/usr/libexec/lan-port-status": "executable"} }

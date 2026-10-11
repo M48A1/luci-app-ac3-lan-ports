@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -105,6 +107,51 @@ type Port struct {
 	Speed     int    `json:"speed_mbps"`
 }
 
+type WAN struct {
+	Device string `json:"device"`
+	Link   bool   `json:"link"`
+	Speed  int    `json:"speed_mbps"`
+	Duplex string `json:"duplex"`
+	Error  string `json:"error,omitempty"`
+}
+
+func readWAN() WAN {
+	w := WAN{Device: "eth0"}
+	read := func(name string) (string, error) {
+		b, err := os.ReadFile("/sys/class/net/eth0/" + name)
+		return strings.TrimSpace(string(b)), err
+	}
+	carrier, err := read("carrier")
+	if err != nil {
+		w.Error = "WAN carrier: " + err.Error()
+		return w
+	}
+	if carrier != "0" && carrier != "1" {
+		w.Error = "invalid WAN carrier state"
+		return w
+	}
+	w.Link = carrier == "1"
+	if !w.Link {
+		return w
+	}
+	speed, err := read("speed")
+	if err != nil {
+		w.Error = "WAN speed: " + err.Error()
+		return w
+	}
+	w.Speed, err = strconv.Atoi(speed)
+	if err != nil || w.Speed <= 0 {
+		w.Speed = 0
+		w.Error = "invalid WAN negotiated speed"
+		return w
+	}
+	duplex, err := read("duplex")
+	if err == nil && (duplex == "full" || duplex == "half") {
+		w.Duplex = duplex
+	}
+	return w
+}
+
 func run() error {
 	fd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, 16)
 	if err != nil {
@@ -169,7 +216,7 @@ func run() error {
 		}
 		ports[i] = Port{i, values[0]&(1<<uint(i)) != 0, code, speed}
 	}
-	return json.NewEncoder(os.Stdout).Encode(map[string]interface{}{"ports": ports, "registers": values, "control": ctrl, "checked_at": time.Now().Format(time.RFC3339)})
+	return json.NewEncoder(os.Stdout).Encode(map[string]interface{}{"ports": ports, "wan": readWAN(), "registers": values, "control": ctrl, "checked_at": time.Now().Format(time.RFC3339)})
 }
 func main() {
 	if err := run(); err != nil {

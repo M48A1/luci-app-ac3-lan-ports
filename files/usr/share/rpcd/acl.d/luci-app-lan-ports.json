@@ -1,6 +1,6 @@
 {
  "luci-app-lan-ports": {
-  "description": "Read eight LAN port link speeds",
+  "description": "Read WAN and eight LAN port link speeds",
   "read": {
    "ubus": { "file": ["exec"] },
    "file": { "/usr/libexec/lan-port-status": ["exec"] }
