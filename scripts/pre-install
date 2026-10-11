@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+board="$(cat /tmp/sysinfo/board_name 2>/dev/null || true)"
+if [ "$board" != "beeconmini,seed-ac3" ]; then
+ echo "LAN port status supports BeeconMini SEED AC3 only." >&2
+ exit 1
+fi
+if [ ! -d /sys/bus/platform/drivers/rtl8373n ]; then
+ echo "The supported RTL8373N driver is not active." >&2
+ exit 1
+fi
