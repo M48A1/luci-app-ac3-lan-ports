@@ -1,30 +1,60 @@
-# SEED AC3 LAN 网口协商速度
+# luci-app-ac3-lan-ports
 
-为 BeeconMini SEED AC3 的 iStoreOS 管理页面增加 8 个 RJ45 LAN 口的连接状态和实际协商速度，每 5 秒刷新。
+**BeeconMini SEED AC3 的 LAN 网口协商速度查看应用。**
+
+在 iStoreOS 的 LuCI 管理页面中查看 8 个 RJ45 LAN 口的连接状态和实际协商速度，每 5 秒自动刷新。页面入口：**状态 → LAN 网口协商速度**。
+
+仓库名为 `luci-app-ac3-lan-ports`，安装包名称为 `luci-app-lan-ports`。
+
+## 功能
+
+- 一页查看 8 个 LAN 口的连接状态和协商速度。
+- 按机壳标签 LAN1–LAN8 显示端口。
+- 显示外部物理网口的协商速度，而不是内部 CPU 链路的固定速率。
+- 未连接的端口显示 `—`；读取失败时显示错误，避免误用历史数据。
+- 无需安装 Docker，也无需运行原厂交换机管理服务。
+- 不修改 VLAN、网络配置、网口速率或双工设置。
 
 ## 已验证环境
 
-| 项目 | 版本 |
+| 项目 | 配置 |
 | --- | --- |
 | 设备 | BeeconMini SEED AC3 |
-| 系统 | iStoreOS 25.12.5 |
-| 架构 | aarch64_cortex-a53 |
+| 固件 | iStoreOS 25.12.5 2026091716 |
+| LuCI | istoreos-25.12 branch 26.253.47074~55ed23b |
+| 处理器架构 | ARMv8 Processor rev 4 |
+| 软件包架构 | aarch64_cortex-a53 |
+| 目标平台 | mediatek/filogic |
 | 内核 | 6.12.94 |
 | 交换机驱动 | kmod-switch-rtl8373 6.12.94-r1 |
 | 软件包 | luci-app-lan-ports 1.0.1-r0 |
 
 只适用于上述硬件及已验证的驱动版本。安装脚本检查机型和驱动，软件包依赖固定的交换机驱动版本。
 
-## 功能与端口对应
+![已验证设备的系统信息](docs/system-status.png)
 
-- 显示连接状态和协商速度，不把内部 CPU 链路的 2.5 Gbps 当作外部 LAN 口速度。
-- 机壳 LAN1–LAN8 分别对应芯片端口 7–0。
-- 无连接或读取失败时不显示历史速率。
-- 不修改 VLAN、网络配置、网口速率或双工设置。
+## 端口顺序
+
+机壳标签与交换机芯片编号的方向相反，页面已按下表映射：
+
+| 机壳标签 / 页面端口 | 芯片端口编号 |
+| --- | --- |
+| LAN1 | 7 |
+| LAN2 | 6 |
+| LAN3 | 5 |
+| LAN4 | 4 |
+| LAN5 | 3 |
+| LAN6 | 2 |
+| LAN7 | 1 |
+| LAN8 | 0 |
+
+实机核对时，物理标签为 LAN6、LAN7、LAN8 的三个端口均显示 **2.5 Gbps**。这是当时的连接状态，实际协商速度取决于对端设备和网线。
 
 ## 安装与卸载
 
-将构建出的 APK 上传至路由器 `/tmp`，在路由器终端执行：
+### 安装
+
+准备 `luci-app-lan-ports-1.0.1-r0.apk`，将文件上传至路由器 `/tmp`，在路由器终端执行：
 
 ```sh
 apk add --allow-untrusted /tmp/luci-app-lan-ports-1.0.1-r0.apk
@@ -33,6 +63,17 @@ apk add --allow-untrusted /tmp/luci-app-lan-ports-1.0.1-r0.apk
 这是 OpenWrt/iStoreOS 软件包，不是 Android 应用。自定义包未签名，`--allow-untrusted` 只用于本次安装。
 
 重新登录管理页面后打开 **状态 → LAN 网口协商速度**。安装、升级和卸载会重启 RPC 服务，当前网页会话需要重新登录。
+
+安装包声明以下依赖；缺少依赖时，需要路由器的软件源能够提供对应版本：
+
+```text
+luci-base
+rpcd-mod-file
+kmod-mdio-netlink
+kmod-switch-rtl8373=6.12.94-r1
+```
+
+### 卸载
 
 可在软件包管理器搜索 `luci-app-lan-ports` 卸载，或执行：
 
@@ -44,8 +85,17 @@ apk del luci-app-lan-ports
 
 在 Linux 环境准备 Go 1.22 或更新版本，以及包含 `mkpkg` 命令的完整 apk-tools v3。部分路由器固件精简了 `mkpkg`，可以用官方 Alpine 的完整静态构建工具临时打包。
 
+克隆源码后进入项目目录：
+
 ```sh
+git clone https://github.com/M48A1/luci-app-ac3-lan-ports.git
+cd luci-app-ac3-lan-ports
 sudo ./build.sh
+```
+
+如果默认 `apk` 不包含 `mkpkg`，指定完整打包工具路径：
+
+```sh
 # 指定其他打包工具路径：
 sudo APK_BUILDER=/path/to/apk.static ./build.sh
 ```
@@ -74,6 +124,20 @@ sudo APK_BUILDER=/path/to/apk.static ./build.sh
 ## 验证
 
 已在上述设备完成安装、卸载、重新安装和 1.0.0 → 1.0.1 升级；已验证页面显示 8 个端口并自动刷新。设备的物理 LAN6、LAN7、LAN8 显示 2.5 Gbps，其余端口未连接。
+
+## 常见问题
+
+**为什么不能直接查看 `eth1` 的速度？**
+
+在已验证设备上，`eth1` 是连接交换机的内部链路，其固定速率不能代表 8 个外部 LAN 口分别协商出的速度。本应用读取交换机的端口状态。
+
+**安装后没有看到菜单？**
+
+重新登录管理页面并刷新浏览器。可用 `apk info -e luci-app-lan-ports` 检查软件包是否已安装。
+
+**页面提示读取失败？**
+
+在路由器终端执行 `/usr/libexec/lan-port-status` 查看错误信息，并确认机型、内核及交换机驱动与已验证环境相符。此版本尚未适配其他机型或驱动版本。
 
 ## 许可证
 
