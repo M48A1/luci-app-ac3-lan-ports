@@ -54,6 +54,11 @@
 
 ### 安装
 
+从 [GitHub Releases](https://github.com/M48A1/luci-app-ac3-lan-ports/releases/tag/v1.0.1) 下载编译好的安装包：
+
+- [luci-app-lan-ports-1.0.1-r0.apk](https://github.com/M48A1/luci-app-ac3-lan-ports/releases/download/v1.0.1/luci-app-lan-ports-1.0.1-r0.apk)
+- [SHA256SUMS.txt](https://github.com/M48A1/luci-app-ac3-lan-ports/releases/download/v1.0.1/SHA256SUMS.txt)
+
 准备 `luci-app-lan-ports-1.0.1-r0.apk`，将文件上传至路由器 `/tmp`，在路由器终端执行：
 
 ```sh
